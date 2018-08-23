@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit.xsd">
+      <!--设置rabbitmq接连工厂，配置基本参数-->
+    <rabbit:connection-factory id="connectionFactory" host="127.0.0.1" port="5672" username="guest" password="guest" virtual-host="/duMQ"></rabbit:connection-factory>
+
+    <!--rabbit交换机exchange3种类型：fanout-exchange（发布订阅）| direct-exchange（路由） | topic-exchange（主题）-->
+    <!--声明一个名为topExchange交换机，auto-declare="true"如果这个交换机不存在，则自动创建-->
+    <rabbit:topic-exchange name="topExchange" auto-declare="true">
+        <rabbit:bindings>
+            <rabbit:binding queue="topicQueue" pattern="china.*"></rabbit:binding>
+        </rabbit:bindings>
+    </rabbit:topic-exchange>
+    <!--使用RabbitTemplate对象来简化生产者发送数据的过程，对常用方法进行了封装-->
+    <rabbit:template id="template" connection-factory="connectionFactory" exchange="topExchange"></rabbit:template>
+    <!--在生产者中配置template对象，用于发送对象-->
+    <bean id="newsProducer" class="com.du.myspringboot.exchange.NewsProducer">
+        <property name="rabbitTemplate" ref="template" />
+    </bean>
+    <!--所有产生的数据在rabbit可视化的控制台中显示-->
+    <rabbit:admin connection-factory="connectionFactory" />
+
+    <rabbit:queue name="topicQueue" auto-declare="true" auto-delete="false" durable="false" exclusive="false"/>
+    <!--监听-->
+    <rabbit:listener-container connection-factory="connectionFactory">
+        <rabbit:listener ref="comsumer" method="recv" queue-names="topicQueue" />
+    </rabbit:listener-container>
+    <bean id="comsumer" class="com.du.myspringboot.exchange.NewsConsumer"/>
+</beans>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--映射文件配置，namespace指向接口-->
+<mapper namespace="com.du.myspringboot.mapper.EmpMapper">
+    <!--
+        select标签代表查询
+        findById要与接口中的方法名对应上
+    -->
+    <select id="findById" parameterType="Integer" resultType="com.du.myspringboot.entity.Emp">
+        select * from emp where empno = #{value}
+    </select>
+
+    <!--
+        resultType="java.util.Map"
+        代表将查询到的每一条记录包装成map ，key就是字段名，value就是字段值
+        LinkedHashMap可以将Map中的数据按插入时保存
+     -->
+    <select id="findDepts" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+        select * from emp e , dept d where e.deptno = d.deptno
+        <if test="pdname != null">
+          and dname = #{pdname}
+        </if>
+        <if test="psal != null">
+          and sal > #{psal}
+        </if>
+    </select>
+    <!-- selectKey代表将id回填，select LAST_INSERT_ID()用户获取最新插入的id select LAST_INSERT_ID()是mysql的内置函数 -->
+    <insert id="create" parameterType="com.du.myspringboot.entity.Emp">
+        INSERT INTO `scott`.`emp`(`ename`, `job`, `mgr`, `hiredate`, `sal`, `comm`, `deptno`)
+        VALUES ( #{ename}, #{job}, #{mgr}, #{hiredate}, #{sal}, #{comm}, #{deptno})
+        <selectKey keyProperty="empno" keyColumn="empno" resultType="Integer" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+    <update id="update" parameterType="com.du.myspringboot.entity.Emp">
+        UPDATE `scott`.`emp` SET `ename` = #{ename}, `job` = #{job}, `mgr` = #{mgr}, `hiredate` = #{hiredate}, `sal` = #{sal}, `comm` = #{comm}, `deptno` = #{deptno}
+        WHERE `empno` = #{empno};
+    </update>
+    <delete id="delete" parameterType="Integer">
+        DELETE FROM emp WHERE empno = #{value}
+    </delete>
+</mapper>
